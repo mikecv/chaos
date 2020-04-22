@@ -1,0 +1,28 @@
+{
+    "DebugLevel" : 10,
+    "LogFileSize" : 100000,
+    "LogBackups" : 3,
+    "Image" :
+    {
+        "imageWidth" : 600,
+        "imageHeight" : 600,
+        "colourBits" : 8
+    },
+    "Calculations" :
+    {
+        "DefCentreReal" : -0.55,
+        "DefCentreImag" : 0.0,
+        "DefPixelSize" : 0.005,
+        "DefScale" : 1.0,
+        "DefMaxIterations" : 100,
+        "ThreadChkDelay" : 1.0
+    },
+    "Colours" :
+    {
+        "maxBoundries" : 10,
+        "renderBlack" : 0,
+        "histLinePlot" : 0,
+        "includeMaxIts" : 0,
+        "logItsCounts" : 0
+    }
+}
