@@ -1,0 +1,14 @@
+window {
+    background-color: lightgrey;
+}
+
+menu {
+    background-color: lightgrey;
+}
+
+button {
+    border-right-color: black;
+    border-top-color: black;
+    border-bottom-color: black;
+    border-left-color: black;
+}

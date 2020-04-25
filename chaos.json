@@ -20,8 +20,8 @@
     "Colours" :
     {
         "maxBoundries" : 10,
-        "renderBlack" : 0,
-        "histLinePlot" : 0,
+        "renderBlack" : 1,
+        "histLinePlot" : 1,
         "includeMaxIts" : 0,
         "logItsCounts" : 0
     }

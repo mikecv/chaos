@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import logging
 import logging.handlers
 import json
@@ -9,11 +8,12 @@ import os.path
 import time
 from datetime import datetime
 from PIL import Image
-import math
-import cmath
-import threading
 import matplotlib.pyplot as plt
 import struct
+
+from utils import *
+from colourPalette import *
+from imageCalc import *
 
 # *******************************************
 # Program history.
@@ -27,7 +27,7 @@ progVersion = "0.1"
 # Program needs Gtk version 3.0.
 # *******************************************
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GdkPixbuf, GLib
+from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
 
 # *******************************************
 # Open configuration file for program constants.
@@ -54,102 +54,22 @@ logger.addHandler(handler)
 logger.info("Program version : {0:s}".format(progVersion))
 
 # *******************************************
+# Load css style sheet for window decorations.
+# *******************************************
+css_provider = Gtk.CssProvider()
+css_provider.load_from_path('./chaos.css')
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(),
+    css_provider,
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+)
+
+# *******************************************
 # GUI handler class.
 # *******************************************
 class Handler:
     def onDestroy(self, *args):
         Gtk.main_quit()
-
-# *******************************************
-# Function to parse object to dictionary items.
-# *******************************************
-def objToDict(obj):
-    output = {}
-    # Go through keys/items in object dictionary.
-    for key, item in obj.__dict__.items():
-        if isinstance(item, list):
-            itemList = []
-            for item in item:
-                subItem = objToDict(item)
-                itemList.append(subItem)
-            output[key] = itemList
-        else:
-            output[key] = item
-    # Return the object dictionary.
-    return output
-
-# *******************************************
-# Colour boundary class for image rendering.
-# Boundaries used to define colour bands.
-# *******************************************
-class colourBoundary():
-    def __init__(self, iLim, red, green, blue):
-
-        self.itLimit = iLim
-        self.colRed = red
-        self.colGreen = green
-        self.colBlue = blue
-
-# *******************************************
-# Colour palette class for image rendering.
-# Palette made out of colour baboundaries.
-# *******************************************
-class colourPalette():
-    # Initializer / Instance Attributes
-    def __init__(self):
-
-        self.colBoundaries = []
-        # Define colour boundaries
-        for i in range (0, config["Colours"]["maxBoundries"]):
-            self.colBoundaries.append(colourBoundary(0, 0, 0, 0))
-
-        # Initialise to default shades of grey palette with 2 boundaries.
-        self.updateColBoundary(1, 1, 0, 0, 200)
-        self.updateColBoundary(2, math.floor(config["Calculations"]["DefMaxIterations"] * 0.20) - 1, 0, 0, 50)
-        self.updateColBoundary(3, math.floor(config["Calculations"]["DefMaxIterations"] * 0.80), 150, 150, 150)
-        self.updateColBoundary(4, config["Calculations"]["DefMaxIterations"], 0, 0, 0)
-
-    # *******************************************
-    # Update colour boundary details.
-    # Boundary number is 1 based.
-    # *******************************************
-    def updateColBoundary(self, boundary, its, red, green, blue):
-        # Update colour band details.
-        self.colBoundaries[boundary - 1].itLimit = its
-        self.colBoundaries[boundary - 1].colRed = red
-        self.colBoundaries[boundary - 1].colGreen = green
-        self.colBoundaries[boundary - 1].colBlue = blue
-        logger.debug("Updated colour boundary : {0:d}, iterations : {1:d}, red : {2:d}, green : {2:d}, blue : {2:d}".format(
-            boundary, its, red, green, blue))
-
-    # *******************************************
-    # Save colour palette to file.
-    # *******************************************
-    def saveToFile(self, jFile):
-        # Create Json output using dictionary function.
-        output = objToDict(self)
-
-        # Open file for writing.
-        outfile = open(jFile, 'w')
-        outfile.write(json.dumps(output, sort_keys=False, indent=4))
-        outfile.close()
-        logger.info("Saved colour palette file : {0:s}".format(jFile))
-
-    # *******************************************
-    # Load colour palette from file.
-    # *******************************************
-    def loadFromFile(self, jFile):
-        try:
-            with open(jFile) as cb_file:
-                cb = json.load(cb_file)
-        except Exception:
-            logger.info("Failed to open colour palette file : {0:s}".format(jFile))
-
-        self.colBoundaries = []
-        cbands = cb["colBoundaries"]
-        for cb in cbands:
-            self.colBoundaries.append(colourBoundary(cb['itLimit'], cb['colRed'], cb['colGreen'], cb['colBlue']))
-        logger.info("Loaded colour palette file : {0:s}".format(jFile))
 
 # *******************************************
 # Chaos class.
@@ -178,9 +98,10 @@ class Mandelbrot():
         # Array to hold histogram information.
         self.bins = [(i + 1) for i in range(self.maxIterations)]
         self.hist = [0 for i in range(self.maxIterations)]
+        self.lowBin = 0
 
         # Colour palette for rendering.
-        self.palette = colourPalette()
+        self.palette = colourPalette(config, logger, builder, self)
  
         # Rendering flag black or colour palette.
         self.black = config["Colours"]["renderBlack"]
@@ -261,6 +182,12 @@ class Mandelbrot():
         colSaveItem.connect('activate', self.saveColourPalette)
         colSaveTool = builder.get_object("SavePaletteTool")
         colSaveTool.connect('clicked', self.saveColourPalette)
+
+        # Set up the Colour Palette/Edit menu item and toolbar icon and response.
+        colEditItem = builder.get_object("EditPaletteItem")
+        colEditItem.connect('activate', self.editColourPalette)
+        colEditTool = builder.get_object("EditPaletteTool")
+        colEditTool.connect('clicked', self.editColourPalette)
 
         # Set up the Colour Plot Histogram menu item and toolbar icon and response.
         plotHistogramItem = builder.get_object("PlotHistogramItem")
@@ -447,6 +374,10 @@ class Mandelbrot():
             while Gtk.events_pending():
                 Gtk.main_iteration()
 
+    # *******************************************
+    # Rerender the image.
+    # Uses the current calculated image, and the latest colour palette and rendering settings.
+    # *******************************************
     def rerenderPic(self, widget):
         logger.debug("Image redraw selected, please wait...")
 
@@ -597,7 +528,6 @@ class Mandelbrot():
                 self.imageWidth = dataWidth
                 self.imageHeight = dataHeight
 
-
             # Read max iterations from file.
             dataIterations = struct.unpack('i', bf.read(4))[0]
             # Resize space required for histogram if required.
@@ -607,7 +537,6 @@ class Mandelbrot():
                 self.hist = [0 for i in range(dataIterations)]
             else:
                 self.maxIterations = dataIterations
-
 
             # Read image centre from file.
             self.centreReal = struct.unpack('f', bf.read(4))[0]
@@ -814,18 +743,27 @@ class Mandelbrot():
             Gtk.main_iteration()
 
     # *******************************************
+    # Edit colour palette control selected.
+    # *******************************************
+    def editColourPalette(self, widget):
+        logger.debug("User selected edit colour palette control.")
+
+        self.palette.editPalette()
+
+    # *******************************************
     # Plot colour histogram control selected.
     # *******************************************
     def plotHistogram(self, widget):
         logger.debug("User selected plot histogram control.")
 
-        # Need to get iterations into single array of iteration occurances.
-        for bin in range (0, self.maxIterations):
-            self.hist[bin] = 0
-        for r in range (0, self.imageHeight):
-            for c in range (0, self.imageWidth):
-                bin = math.floor(self.iterations[r][c]) - 1
-                self.hist[bin] += 1
+        # Need to put iterations counts into bins for histogram.
+        self.doHistogramBins()
+
+        # Calculate derivatives.
+        # Potential use them for detecting turning points for colour changes.
+        firstDeriv = [0 for i in range(self.maxIterations)]
+        for i in range (1, (self.maxIterations - 1)):
+            firstDeriv[i-1] = self.hist[i] - self.hist[i-1]
 
         fig = plt.figure()
         # Option to not include max iterations in histogram.
@@ -834,13 +772,17 @@ class Mandelbrot():
         if self.incMaxIterations == True :
             if self.histLinePlot == True :
                 plt.plot(self.bins, self.hist, color='blue', linewidth=1, marker='o', markersize=2)
+                plt.plot(self.bins, firstDeriv, color='red', linewidth=1)
             else:
                 plt.bar(self.bins, self.hist, color='blue')
+                plt.plot(self.bins, firstDeriv, color='red', linewidth=1)
         else:
             if self.histLinePlot == True :
                 plt.plot(self.bins[:-1], self.hist[:-1], color='blue', linewidth=1, marker='o', markersize=2)
+                plt.plot(self.bins[:-1], firstDeriv[:-1], color='red', linewidth=1)
             else:
                 plt.bar(self.bins[:-1], self.hist[:-1], color='blue')
+                plt.plot(self.bins[:-1], firstDeriv[:-1], color='red', linewidth=1)
         plt.xlabel('Iterations')
         plt.ylabel('Frequency')
         plt.title('Histogram of Divergence Iterations')
@@ -856,6 +798,27 @@ class Mandelbrot():
         # Update status bar to instruct user to seclect centre position
         self.statusbar.pop(self.context_id)
         self.statusbar.push(self.context_id, "Histogram of divergence iteration counts...")
+
+    # *******************************************
+    # Put iteration data into bins.
+    # *******************************************
+    def doHistogramBins(self):
+
+        # Need to get iterations into single array of iteration occurances.
+        for bin in range (0, self.maxIterations):
+            self.hist[bin] = 0
+        for r in range (0, self.imageHeight):
+            for c in range (0, self.imageWidth):
+                bin = math.floor(self.iterations[r][c]) - 1
+                self.hist[bin] += 1
+
+        # Look for lowest non-zero bin.
+        # Used for black rendering to maximize colour range.
+        for i, bin in enumerate(self.hist):
+            if bin > 0:
+                break
+        self.lowBin = i
+        logger.debug("Lowest non-zero bin for iteration histogram : {0:d}".format(self.lowBin))
 
     # *******************************************
     # Help/About control selected.
@@ -889,7 +852,7 @@ class Mandelbrot():
         startTime = datetime.now()
 
         # Launch thread to calculate image.
-        imageThread = imageCalc(1, "CalcImage", self, rowRange, colRange)
+        imageThread = imageCalc(1, "CalcImage", logger, self, rowRange, colRange)
         imageThread.start()
 
         # Wait for thread to end.
@@ -971,6 +934,11 @@ class Mandelbrot():
                 break
         logger.debug("Useful colour palette boundaries : {0:d}, total boundaries : {1:d}".format(useFulBoundaries, numBoundaries))
 
+        # Need to put iterations counts into bins for histogram.
+        # This also gets lowest iteration bin used for black renders.
+        if black:
+            self.doHistogramBins()
+
         # Set the pixels in the PIL image.
         for row in range (0, self.imageHeight):
             for col in range (0, self.imageWidth):
@@ -1015,11 +983,12 @@ class Mandelbrot():
                         pxGreen = self.palette.colBoundaries[useFulBoundaries - 1].colGreen
                         pxBlue = self.palette.colBoundaries[useFulBoundaries - 1].colBlue
                 else:
-                    # Option to render just in black selected.
+                    # Option to render just in black (and shades there of) selected.
                     # Don't need to check colour palette.
-                    pxRed = 255 - math.floor(self.iterations[row][col] / self.maxIterations * 255)
-                    pxGreen = 255 - math.floor(self.iterations[row][col] / self.maxIterations * 255)
-                    pxBlue = 255 - math.floor(self.iterations[row][col] / self.maxIterations * 255)
+                    intensity = math.floor((self.iterations[row][col] - self.lowBin) / (self.maxIterations - self.lowBin) * 255)
+                    pxRed = intensity
+                    pxGreen = intensity
+                    pxBlue = intensity
 
                 # Update the image pixel colour.
                 self.pilPic.putpixel((col, row), (pxRed, pxGreen, pxBlue))
@@ -1028,126 +997,6 @@ class Mandelbrot():
         data = GLib.Bytes.new(self.pilPic.tobytes())
         pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, False, self.imageColours, self.imageWidth, self.imageHeight, self.imageWidth * 3)
         self.gtkPic.set_from_pixbuf(pixbuf)
-
-# *******************************************
-# Function to calculate colour in range.
-# Given iteration count and low and high boundaries;
-# *******************************************
-def getColInRange(it, bLo, bHi):
-    # Check that iterations are between boundaries.
-    if ((it < bLo.itLimit) or (it > bHi.itLimit)):
-        logger.debug("Iterations not between boundary iterations.")
-    else:
-        # Determine where in iteration range point is.
-        # Note iterations always increasing.
-        itRange = bHi.itLimit - bLo.itLimit
-        ratio = (it - bLo.itLimit) / itRange
-
-        # Apply range to colour limits for boundaries.
-        # Note that colour limits can be increasing, decreasing, or the same.
-        # Red
-        redDiff = bHi.colRed - bLo.colRed
-        if (redDiff == 0):
-            colRed = bLo.colRed
-        else:
-            colRed = math.floor(bLo.colRed + (redDiff * ratio))
-        # Green
-        greenDiff = bHi.colGreen - bLo.colGreen
-        if (greenDiff == 0):
-            colGreen = bLo.colGreen
-        else:
-            colGreen = math.floor(bLo.colGreen + (greenDiff * ratio))
-        # Blue
-        blueDiff = bHi.colBlue - bLo.colBlue
-        if (blueDiff == 0):
-            colBlue = bLo.colBlue
-        else:
-            colBlue = math.floor(bLo.colBlue + (blueDiff * ratio))
-
-    return colRed, colGreen, colBlue
-
-# *******************************************
-# Perform inmage calculation thread.
-# *******************************************
-class imageCalc(threading.Thread):
-
-    # *******************************************
-    # Thread initialisation.
-    # Argument includes the main Mandlebrot class,
-    # and row and column limit coupletes.
-    # For complete image coupletes should be (0, width-1) (0, height-1)
-    # *******************************************
-    def __init__(self, threadID, threadName, chaos, rowRange, colRange):
-        threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.threadName = threadName
-        self.chaos = chaos
-        self.rowRange = rowRange
-        self.colRange = colRange
-
-        # Get pixel increment size.
-        self.inc = self.chaos.pxSize
-
-        logger.debug("Calculating image rangers, ROWS : ({0:d}, {1:d}), COLUMNS : ({2:d}, {3:d})".format(self.rowRange[0], self.rowRange[1], self.colRange[0], self.colRange[1]))
-        logger.debug("Image centre location, REAL : {0:f}, IMAGINARY : , {1:f}".format(self.chaos.centreReal, self.chaos.centreImag))
-
-        # Determine start point (top left) for box to calculate.
-        self.calcStartX = self.chaos.centreReal - (((self.chaos.imageWidth / 2.0) - self.colRange[0]) * self.inc)
-        self.calcStartY = self.chaos.centreImag + (((self.chaos.imageHeight / 2.0) - self.rowRange[0]) * self.inc)
-        logger.debug("Calculating image at start position, REAL : {0:f}, IMAGINARY : {1:f}".format(self.calcStartX, self.calcStartY))
-
-    # *******************************************
-    # Run method called when thread started.
-    # *******************************************
-    def run(self):
-        # Initialise complex value of first pixel point.
-        pt = complex(self.calcStartX, self.calcStartY)
-
-        # Calculate max iterations for all pixels.
-        for row in range (self.rowRange[0], self.rowRange[1]):
-            for col in range (self.colRange[0], self.colRange[1]):
-                # Initialise divergence to false; keep looping until divergence confirmed.
-                diverges = False
-                # Initialise iteration count.
-                numIterations = 1
-                # Initialise the function result of the Mandelbrot function.
-                pxFn = complex(0.0, 0.0)
-
-                # Keep iterating until function diverges.
-                while ((diverges == False) & (numIterations < self.chaos.maxIterations)):
-                    # Mandelbrot function is Fn+1 = Fn^2 + pt
-                    pxFn = (pxFn * pxFn) + pt
-                    # Check for divergence towards infinity.
-                    # Divergence guaranteed if modulus of Fn is >= 2.
-                    modFn2 = cmath.polar(pxFn)[0]
-                    if (modFn2 >= 2.0):
-                        diverges = True
-                    else:
-                        numIterations += 1
-
-                # Divergence so far is overstated or assured divergence.
-                # Can calculate fractional divergence for higher definition.
-                # Fractional divergence can be approximated as mu = log (log(|Z(n)|)) / log(2)
-                modFn = cmath.polar(pxFn)[0]
-                if (modFn > math.e):
-                    muLog = math.log(math.log(cmath.polar(pxFn)[0])) / math.log(2.0)
-                else:
-                    muLog = 0
-                mu = float(numIterations) + 1 - muLog
-
-                # Limit fractional divergence to maximum iterations.
-                if (mu > self.chaos.maxIterations):
-                    mu = self.chaos.maxIterations
-
-                # Update number of iterations in the image iterations array.
-                self.chaos.iterations[row][col] = mu
-
-                # Increment point to next point in row.
-                pt = pt + complex(self.inc, 0.0)
-
-            # Increment point to start of next row.
-            pt = pt - complex(0.0, self.inc)
-            pt = complex(self.calcStartX, pt.imag)
 
 # *******************************************
 # Create main window, and launch.
