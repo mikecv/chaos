@@ -14,7 +14,7 @@
         "DefCentreImag" : 0.0,
         "DefPixelSize" : 0.005,
         "DefScale" : 1.0,
-        "DefMaxIterations" : 100,
+        "DefMaxIterations" : 250,
         "ThreadChkDelay" : 1.0
     },
     "Colours" :

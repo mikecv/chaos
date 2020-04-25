@@ -26,7 +26,7 @@ class colourPalette():
 
         self.colBoundaries = []
         # Define colour boundaries
-        for i in range (0, config["Colours"]["maxBoundries"]):
+        for i in range (0, self.config["Colours"]["maxBoundries"]):
             self.colBoundaries.append(colourBoundary(0, 0, 0, 0))
 
         # Initialise to default shades of grey palette with 2 boundaries.
@@ -61,7 +61,10 @@ class colourPalette():
         button = self.builder.get_object("ColSaveBtn")
         button.connect('clicked', self.saveEdit)
 
+        # Slider settings.
         adjustment = Gtk.Adjustment(0.0, 0.0, self.chaos.maxIterations, 10, 5, 20)
+
+        # Test of boundary palette data.
         itScale1 = self.builder.get_object("itScale1")
         itScale1.set_adjustment(adjustment)
         itScale1.set_fill_level(self.chaos.maxIterations)
