@@ -868,28 +868,6 @@
             <property name="margin_top">5</property>
             <property name="margin_bottom">5</property>
             <child>
-              <object class="GtkScale" id="itScale1">
-                <property name="width_request">0</property>
-                <property name="height_request">310</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="halign">center</property>
-                <property name="margin_left">5</property>
-                <property name="margin_right">5</property>
-                <property name="margin_bottom">15</property>
-                <property name="orientation">vertical</property>
-                <property name="inverted">True</property>
-                <property name="fill_level">0</property>
-                <property name="round_digits">1</property>
-                <property name="digits">0</property>
-                <property name="value_pos">bottom</property>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">1</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkLabel" id="itLabel1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -899,19 +877,6 @@
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkColorButton" id="itColour1">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="title" translatable="yes">Boundary colour</property>
-                <property name="show_editor">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">2</property>
               </packing>
             </child>
             <child>
@@ -1023,7 +988,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkScale" id="itScale2">
+              <object class="GtkScale" id="itScale1">
+                <property name="name">slider1</property>
                 <property name="width_request">0</property>
                 <property name="height_request">310</property>
                 <property name="visible">True</property>
@@ -1033,6 +999,30 @@
                 <property name="margin_right">5</property>
                 <property name="margin_bottom">15</property>
                 <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
+                <property name="fill_level">0</property>
+                <property name="round_digits">1</property>
+                <property name="digits">0</property>
+                <property name="value_pos">bottom</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScale" id="itScale2">
+                <property name="name">slider2</property>
+                <property name="width_request">0</property>
+                <property name="height_request">310</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="halign">center</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
+                <property name="margin_bottom">15</property>
+                <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
                 <property name="fill_level">0</property>
                 <property name="round_digits">1</property>
                 <property name="digits">0</property>
@@ -1054,6 +1044,7 @@
                 <property name="margin_right">5</property>
                 <property name="margin_bottom">15</property>
                 <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
                 <property name="fill_level">0</property>
                 <property name="round_digits">1</property>
                 <property name="digits">0</property>
@@ -1075,6 +1066,7 @@
                 <property name="margin_right">5</property>
                 <property name="margin_bottom">15</property>
                 <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
                 <property name="fill_level">0</property>
                 <property name="round_digits">1</property>
                 <property name="digits">0</property>
@@ -1096,6 +1088,7 @@
                 <property name="margin_right">5</property>
                 <property name="margin_bottom">15</property>
                 <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
                 <property name="fill_level">0</property>
                 <property name="round_digits">1</property>
                 <property name="digits">0</property>
@@ -1117,6 +1110,7 @@
                 <property name="margin_right">5</property>
                 <property name="margin_bottom">15</property>
                 <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
                 <property name="fill_level">0</property>
                 <property name="round_digits">1</property>
                 <property name="digits">0</property>
@@ -1138,6 +1132,7 @@
                 <property name="margin_right">5</property>
                 <property name="margin_bottom">15</property>
                 <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
                 <property name="fill_level">0</property>
                 <property name="round_digits">1</property>
                 <property name="digits">0</property>
@@ -1159,6 +1154,7 @@
                 <property name="margin_right">5</property>
                 <property name="margin_bottom">15</property>
                 <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
                 <property name="fill_level">0</property>
                 <property name="round_digits">1</property>
                 <property name="digits">0</property>
@@ -1180,6 +1176,7 @@
                 <property name="margin_right">5</property>
                 <property name="margin_bottom">15</property>
                 <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
                 <property name="fill_level">0</property>
                 <property name="round_digits">1</property>
                 <property name="digits">0</property>
@@ -1201,6 +1198,7 @@
                 <property name="margin_right">5</property>
                 <property name="margin_bottom">15</property>
                 <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
                 <property name="fill_level">0</property>
                 <property name="round_digits">1</property>
                 <property name="digits">0</property>
@@ -1209,6 +1207,19 @@
               <packing>
                 <property name="left_attach">9</property>
                 <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkColorButton" id="itColour1">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="title" translatable="yes">Boundary colour</property>
+                <property name="show_editor">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">2</property>
               </packing>
             </child>
             <child>
@@ -1303,19 +1314,6 @@
               </packing>
             </child>
             <child>
-              <object class="GtkColorButton" id="itColour10">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="title" translatable="yes">Boundary colour</property>
-                <property name="show_editor">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">9</property>
-                <property name="top_attach">2</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkColorButton" id="itColour9">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -1325,6 +1323,19 @@
               </object>
               <packing>
                 <property name="left_attach">8</property>
+                <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkColorButton" id="itColour10">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="title" translatable="yes">Boundary colour</property>
+                <property name="show_editor">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">9</property>
                 <property name="top_attach">2</property>
               </packing>
             </child>

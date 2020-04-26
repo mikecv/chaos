@@ -148,13 +148,15 @@ class Mandelbrot():
 
         # Set up zoom value slider.
         self.zoomFactor = 1.0
-        adjustment = Gtk.Adjustment(0.0, 0.0, 25.0, 0.2, 25.0, 0)
-        self.zoomSlider = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=adjustment)
+        self.zoomSlider = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL)
+        self.zoomSlider.set_range(0, 25.0)
         self.zoomSlider.set_value_pos(Gtk.PositionType.BOTTOM)
+        self.zoomSlider.add_mark(0.0, Gtk.PositionType.BOTTOM, '0')
         self.zoomSlider.add_mark(5.0, Gtk.PositionType.BOTTOM, '5')
         self.zoomSlider.add_mark(10.0, Gtk.PositionType.BOTTOM, '10')
         self.zoomSlider.add_mark(15.0, Gtk.PositionType.BOTTOM, '15')
         self.zoomSlider.add_mark(20.0, Gtk.PositionType.BOTTOM, '20')
+        self.zoomSlider.add_mark(25.0, Gtk.PositionType.BOTTOM, '25')
         self.zoomSlider.set_value(self.zoomFactor)
         self.zoomSlider.connect("value-changed", self.ScaleChange)
         zoomBox.add(self.zoomSlider)

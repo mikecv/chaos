@@ -3,14 +3,25 @@
 import gi
 import math
 
+from utils import *
 from colourBoundary import *
 
 # *******************************************
-# Class needs Gtk version 3.0.
+# Classes needs Gtk version 3.0.
 # *******************************************
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 
+# *******************************************
+# Colour boundary control class
+# *******************************************
+class boundaryControl():
+    # Initializer / Instance Attributes
+    def __init__(self, slider, colour):
+
+        self.sliderCtrl = slider
+        self.colourCtrl = colour
+    
 # *******************************************
 # Colour palette class for image rendering.
 # Palette made out of colour boundaries.
@@ -24,12 +35,12 @@ class colourPalette():
         self.builder = builder
         self.chaos = chaos
 
-        self.colBoundaries = []
         # Define colour boundaries
+        self.colBoundaries = []
         for i in range (0, self.config["Colours"]["maxBoundries"]):
             self.colBoundaries.append(colourBoundary(0, 0, 0, 0))
 
-        # Initialise to default shades of grey palette with 2 boundaries.
+        # Initialise to default colour palette.
         self.updateColBoundary(1, 1, 0, 0, 200)
         self.updateColBoundary(2, math.floor(self.chaos.maxIterations * 0.20) - 1, 0, 0, 50)
         self.updateColBoundary(3, math.floor(self.chaos.maxIterations * 0.80), 150, 150, 150)
@@ -61,16 +72,19 @@ class colourPalette():
         button = self.builder.get_object("ColSaveBtn")
         button.connect('clicked', self.saveEdit)
 
-        # Slider settings.
-        adjustment = Gtk.Adjustment(0.0, 0.0, self.chaos.maxIterations, 10, 5, 20)
+        # Boundary controls.
+        self.boundaryControls = []
 
-        # Test of boundary palette data.
-        itScale1 = self.builder.get_object("itScale1")
-        itScale1.set_adjustment(adjustment)
-        itScale1.set_fill_level(self.chaos.maxIterations)
-        itScale1.set_value(self.colBoundaries[0].itLimit)
-        itColour1 = self.builder.get_object("itColour1")
+        # Set up boundary controls.
+        # Get them to match current saved values.
+        for i in range (0, self.config["Colours"]["maxBoundries"]):
+            self.boundaryControls.append(boundaryControl(self.builder.get_object("itScale{0:d}".format(i+1)), self.builder.get_object("itColour{0:d}".format(i+1))))
+            self.boundaryControls[i].sliderCtrl.set_range(0, self.chaos.maxIterations)
+            self.boundaryControls[i].sliderCtrl.set_fill_level(self.chaos.maxIterations)
+            self.boundaryControls[i].sliderCtrl.set_value(self.colBoundaries[i].itLimit)
+            self.boundaryControls[i].colourCtrl.set_rgba(conGdkCol(self.colBoundaries[i].colRed, self.colBoundaries[i].colGreen, self.colBoundaries[i].colBlue, 255))
 
+        # Show the colour palette edit dialog.
         self.winColour.show_all()
 
     # *******************************************
@@ -84,6 +98,7 @@ class colourPalette():
     # Do not overwrite original colour palette.
     # *******************************************
     def quitEdit(self, widget):
+        # Do nothing, just hide dialog.
         self.winColour.hide()
 
     # *******************************************
@@ -91,6 +106,19 @@ class colourPalette():
     # Overwrite original colour palette with new one.
     # *******************************************
     def saveEdit(self, widget):
+        # Need to save all the settings to the colour palette.
+        for i in range (0, self.config["Colours"]["maxBoundries"]):
+            # Get max iterations.
+            self.colBoundaries[i].itLimit = int(math.floor(self.boundaryControls[i].sliderCtrl.get_value()))
+
+            # Get component colours.
+            # Note that Gdk.colour components in range 0-65535, need to convert to 0-255.
+            gdkc = self.boundaryControls[i].colourCtrl.get_color()
+            self.colBoundaries[i].colRed = int(math.floor(gdkc.red / 257))
+            self.colBoundaries[i].colGreen = int(math.floor(gdkc.green / 257))
+            self.colBoundaries[i].colBlue = int(math.floor(gdkc.blue / 257))
+    
+        # Hide the dialog.
         self.winColour.hide()
 
     # *******************************************
