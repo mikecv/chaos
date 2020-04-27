@@ -173,6 +173,12 @@ class Mandelbrot():
         redrawTool = builder.get_object("RedrawTool")
         redrawTool.connect('clicked', self.rerenderPic)
 
+        # Set up the View / Set maximum iterations menu item and toolbar icon and response.
+        self.MaxItsItem = builder.get_object("SetMaxIterationsItem")
+        self.MaxItsItem.connect('activate', self.setMaxIterations)
+        self.MaxItsTool = builder.get_object("SetMaxIterationsTool")
+        self.MaxItsTool.connect('clicked', self.setMaxIterations)
+
         # Set up the Colour Palette / Load menu item and toolbar icon and response.
         colLoadItem = builder.get_object("LoadPaletteItem")
         colLoadItem.connect('activate', self.loadColourPalette)
@@ -186,16 +192,16 @@ class Mandelbrot():
         colSaveTool.connect('clicked', self.saveColourPalette)
 
         # Set up the Colour Palette/Edit menu item and toolbar icon and response.
-        colEditItem = builder.get_object("EditPaletteItem")
-        colEditItem.connect('activate', self.editColourPalette)
-        colEditTool = builder.get_object("EditPaletteTool")
-        colEditTool.connect('clicked', self.editColourPalette)
+        self.colEditItem = builder.get_object("EditPaletteItem")
+        self.colEditItem.connect('activate', self.editColourPalette)
+        self.colEditTool = builder.get_object("EditPaletteTool")
+        self.colEditTool.connect('clicked', self.editColourPalette)
 
         # Set up the Colour Plot Histogram menu item and toolbar icon and response.
-        plotHistogramItem = builder.get_object("PlotHistogramItem")
-        plotHistogramItem.connect('activate', self.plotHistogram)
-        plotHistogramTool = builder.get_object("PlotHistogramTool")
-        plotHistogramTool.connect('clicked', self.plotHistogram)
+        self.plotHistogramItem = builder.get_object("PlotHistogramItem")
+        self.plotHistogramItem.connect('activate', self.plotHistogram)
+        self.plotHistogramTool = builder.get_object("PlotHistogramTool")
+        self.plotHistogramTool.connect('clicked', self.plotHistogram)
 
         # Set up right details pane.
         self.centrePtRealLbl = builder.get_object("centrePtRealLbl")
@@ -398,6 +404,73 @@ class Mandelbrot():
             Gtk.main_iteration()
 
     # *******************************************
+    # Allow user to set the maximum iteration limit for the image.
+    # *******************************************
+    def setMaxIterations(self, widget):
+        # Create dialog to set maximum iterations.
+        self.itsedit = builder.get_object("itsEntryDialog")
+
+        # Define button callbacks.
+        buttonItsCancel = builder.get_object("cancelItsBtn")
+        buttonItsCancel.connect('clicked', self.quitMaxIts)
+        buttonItsSave = builder.get_object("acceptItsBtn")
+        buttonItsSave.connect('clicked', self.saveMaxIts)
+
+        # Define the maximum iterations entry field.
+        self.maxItsEntry = builder.get_object("maxItsEntry")
+        # Set the entry to be the current maximum iteration count.
+        self.maxItsEntry.set_text(str(self.maxIterations))
+
+        # Define warning text label.
+        self.warnText = builder.get_object("itsWarning")
+        self.warnText.set_text("")
+
+        # Show the maximum iterations edit dialog.
+        self.itsedit.show_all()
+
+    # *******************************************
+    # Quit edit callback.
+    # Do not overwrite current maximum iterations.
+    # *******************************************
+    def quitMaxIts(self, widget):
+        # Do nothing, just hide dialog.
+        self.warnText.set_text("")
+        self.itsedit.hide()
+
+    # *******************************************
+    # Save edit callback.
+    # Overwrite maximum iteration value.
+    # *******************************************
+    def saveMaxIts(self, widget):
+        # Red the value of the 
+        usrEntry = self.maxItsEntry.get_text()
+
+        # Check if the entry is an integer.
+        try: 
+            mi = int(usrEntry)
+            if (mi > 0):
+                self.warnText.set_text("")
+                self.itsedit.hide()
+
+                self.maxIterations = mi
+                self.itsedit.hide()
+                self.updateInfo()
+            else:
+                # Integer entered but not greater than 0, warning.
+                self.warnText.set_markup("<span foreground=\"red\">"
+                    + "Not a valid maximum iterations count.\n"
+                    + "Please enter an integer greater than 0."
+                    + "</span>"
+                )
+        except ValueError:
+            # Not a valid integer, warning.
+                self.warnText.set_markup("<span foreground=\"red\">"
+                    + "Not a valid maximum iterations count.\n"
+                    + "Please enter an integer greater than 0."
+                    + "</span>"
+                )
+
+    # *******************************************
     # File/New menu item selected.
     # Starts off with the default Mandlebrot plot.
     # *******************************************
@@ -455,6 +528,15 @@ class Mandelbrot():
     def newPic(self, widget):
         logger.debug("User selected new image control.")
 
+
+        # Inhibit the some menu items during image generation.
+        self.MaxItsItem.set_sensitive(False)
+        self.MaxItsTool.set_sensitive(False)
+        self.colEditItem.set_sensitive(False)
+        self.colEditTool.set_sensitive(False)
+        self.plotHistogramItem.set_sensitive(False)
+        self.plotHistogramTool.set_sensitive(False)
+
         # Initialise pic to blank image.
         self.initPic()
 
@@ -482,11 +564,27 @@ class Mandelbrot():
         while Gtk.events_pending():
             Gtk.main_iteration()
 
+        # Enable menu items inhibited during image generation.
+        self.MaxItsItem.set_sensitive(True)
+        self.MaxItsTool.set_sensitive(True)
+        self.colEditItem.set_sensitive(True)
+        self.colEditTool.set_sensitive(True)
+        self.plotHistogramItem.set_sensitive(True)
+        self.plotHistogramTool.set_sensitive(True)
+
     # *******************************************
     # Load image data control selected.
     # *******************************************
     def loadPicData(self, widget):
         logger.debug("User selected load image data control.")
+
+        # Inhibit the some menu items during image generation.
+        self.MaxItsItem.set_sensitive(False)
+        self.MaxItsTool.set_sensitive(False)
+        self.colEditItem.set_sensitive(False)
+        self.colEditTool.set_sensitive(False)
+        self.plotHistogramItem.set_sensitive(False)
+        self.plotHistogramTool.set_sensitive(False)
 
         # Start time for image generation timing.
         startTime = datetime.now()
@@ -572,6 +670,14 @@ class Mandelbrot():
         # Check for Gtk events. Required to update status bar now.
         while Gtk.events_pending():
             Gtk.main_iteration()
+
+        # Enable menu items inhibited during image generation.
+        self.MaxItsItem.set_sensitive(True)
+        self.MaxItsTool.set_sensitive(True)
+        self.colEditItem.set_sensitive(True)
+        self.colEditTool.set_sensitive(True)
+        self.plotHistogramItem.set_sensitive(True)
+        self.plotHistogramTool.set_sensitive(True)
 
     # *******************************************
     # Save image data control selected.
@@ -762,7 +868,8 @@ class Mandelbrot():
         self.doHistogramBins()
 
         # Calculate derivatives.
-        # Potential use them for detecting turning points for colour changes.
+        # Potentially use them for detecting turning points for colour changes.
+        # Not being plotted at this stage.
         firstDeriv = [0 for i in range(self.maxIterations)]
         for i in range (1, (self.maxIterations - 1)):
             firstDeriv[i-1] = self.hist[i] - self.hist[i-1]
@@ -774,17 +881,13 @@ class Mandelbrot():
         if self.incMaxIterations == True :
             if self.histLinePlot == True :
                 plt.plot(self.bins, self.hist, color='blue', linewidth=1, marker='o', markersize=2)
-                plt.plot(self.bins, firstDeriv, color='red', linewidth=1)
             else:
                 plt.bar(self.bins, self.hist, color='blue')
-                plt.plot(self.bins, firstDeriv, color='red', linewidth=1)
         else:
             if self.histLinePlot == True :
                 plt.plot(self.bins[:-1], self.hist[:-1], color='blue', linewidth=1, marker='o', markersize=2)
-                plt.plot(self.bins[:-1], firstDeriv[:-1], color='red', linewidth=1)
             else:
                 plt.bar(self.bins[:-1], self.hist[:-1], color='blue')
-                plt.plot(self.bins[:-1], firstDeriv[:-1], color='red', linewidth=1)
         plt.xlabel('Iterations')
         plt.ylabel('Frequency')
         plt.title('Histogram of Divergence Iterations')
@@ -872,6 +975,14 @@ class Mandelbrot():
     # to save time by avoiding recomputation.
     # *******************************************
     def moveImage(self, hMove, vMove):
+        # Inhibit the some menu items during image generation.
+        self.MaxItsItem.set_sensitive(False)
+        self.MaxItsTool.set_sensitive(False)
+        self.colEditItem.set_sensitive(False)
+        self.colEditTool.set_sensitive(False)
+        self.plotHistogramItem.set_sensitive(False)
+        self.plotHistogramTool.set_sensitive(False)
+
         # Start time for image generation timing.
         startTime = datetime.now()
 
@@ -914,6 +1025,14 @@ class Mandelbrot():
         # End time and image generation elapsed time.
         endTime = datetime.now()
         self.genTime = "{0:s}".format(str(endTime - startTime))
+
+        # Enable menu items inhibited during image generation.
+        self.MaxItsItem.set_sensitive(True)
+        self.MaxItsTool.set_sensitive(True)
+        self.colEditItem.set_sensitive(True)
+        self.colEditTool.set_sensitive(True)
+        self.plotHistogramItem.set_sensitive(True)
+        self.plotHistogramTool.set_sensitive(True)
     
     # *******************************************
     # Method to render the Mandlebrot image.

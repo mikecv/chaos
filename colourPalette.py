@@ -67,10 +67,10 @@ class colourPalette():
         self.winColour = self.builder.get_object("colourPaletteWindow")
 
         # Define button callbacks.
-        button = self.builder.get_object("ColCancelBtn")
-        button.connect('clicked', self.quitEdit)
-        button = self.builder.get_object("ColSaveBtn")
-        button.connect('clicked', self.saveEdit)
+        buttonColCancel = self.builder.get_object("ColCancelBtn")
+        buttonColCancel.connect('clicked', self.quitColEdit)
+        buttonColSave = self.builder.get_object("ColSaveBtn")
+        buttonColSave.connect('clicked', self.saveColEdit)
 
         # Boundary controls.
         self.boundaryControls = []
@@ -88,16 +88,10 @@ class colourPalette():
         self.winColour.show_all()
 
     # *******************************************
-    # Iteration limit changed callback.
-    # *******************************************
-    def itLimChanged(self, widget):
-        self.logger.debug("Iteration limit changed.")
-
-    # *******************************************
     # Quit edit callback.
     # Do not overwrite original colour palette.
     # *******************************************
-    def quitEdit(self, widget):
+    def quitColEdit(self, widget):
         # Do nothing, just hide dialog.
         self.winColour.hide()
 
@@ -105,7 +99,7 @@ class colourPalette():
     # Save edit callback.
     # Overwrite original colour palette with new one.
     # *******************************************
-    def saveEdit(self, widget):
+    def saveColEdit(self, widget):
         # Need to save all the settings to the colour palette.
         for i in range (0, self.config["Colours"]["maxBoundries"]):
             # Get max iterations.
