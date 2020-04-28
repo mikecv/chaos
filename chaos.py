@@ -179,6 +179,12 @@ class Mandelbrot():
         self.MaxItsTool = builder.get_object("SetMaxIterationsTool")
         self.MaxItsTool.connect('clicked', self.setMaxIterations)
 
+        # Set up the View / Recalculate Image menu item and toolbar icon and response.
+        RecalculateItem = builder.get_object("RecalculateItem")
+        RecalculateItem.connect('activate', self.recalculateImage)
+        RecalculateTool = builder.get_object("RecalculateTool")
+        RecalculateTool.connect('clicked', self.recalculateImage)
+
         # Set up the Colour Palette / Load menu item and toolbar icon and response.
         colLoadItem = builder.get_object("LoadPaletteItem")
         colLoadItem.connect('activate', self.loadColourPalette)
@@ -469,6 +475,37 @@ class Mandelbrot():
                     + "Please enter an integer greater than 0."
                     + "</span>"
                 )
+
+    # *******************************************
+    # Recalculate the image.
+    # Regenerate the image with the current setting and zoom factor or 1.0.
+    # This is used to regenerate the same image after max iterations has changed.
+    # *******************************************
+    def recalculateImage(self, widget):
+        logger.debug("Image recalculation selected, please wait...")
+
+        # Update status bar to wait for image.
+        self.statusbar.pop(self.context_id)
+        self.statusbar.push(self.context_id, "Recalculating image, please wait...")
+
+        # Check for Gtk events. Required to update status bar now.
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+
+        # Generate zoomed image at current centre.
+        self.genImage((0, self.imageHeight - 1), (0, self.imageWidth - 1))
+        self.renderImage(self.black)
+
+        # Update image data following image generation.
+        self.updateInfo()
+
+        # Update status bar to wait for image.
+        self.statusbar.pop(self.context_id)
+        self.statusbar.push(self.context_id, "Image recalculation complete in : {0:s}".format(self.genTime))
+
+        # Check for Gtk events. Required to update status bar now.
+        while Gtk.events_pending():
+            Gtk.main_iteration()
 
     # *******************************************
     # File/New menu item selected.
@@ -908,6 +945,11 @@ class Mandelbrot():
     # Put iteration data into bins.
     # *******************************************
     def doHistogramBins(self):
+
+        # Reinitialise histogram bins as max iterations may have changed.
+        self.bins = [(i + 1) for i in range(self.maxIterations)]
+        self.hist = [0 for i in range(self.maxIterations)]
+        self.lowBin = 0
 
         # Need to get iterations into single array of iteration occurances.
         for bin in range (0, self.maxIterations):

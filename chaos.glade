@@ -122,6 +122,13 @@
                         <property name="use_stock">False</property>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="RecalculateItem">
+                        <property name="label" translatable="yes">Recalculate image</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_stock">False</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -337,6 +344,20 @@
                 <property name="label" translatable="yes">Set maximum iterations</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-edit</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="RecalculateTool">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Recalculate image</property>
+                <property name="label" translatable="yes">Recalculate image</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-execute</property>
               </object>
               <packing>
                 <property name="expand">False</property>
