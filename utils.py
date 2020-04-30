@@ -37,7 +37,6 @@ def getColInRange(it, bLo, bHi):
             colGreen = bLo.colGreen
         else:
             colGreen = math.floor(bLo.colGreen + (greenDiff * ratio))
-        # Blue
         blueDiff = bHi.colBlue - bLo.colBlue
         if (blueDiff == 0):
             colBlue = bLo.colBlue
@@ -51,24 +50,6 @@ def getColInRange(it, bLo, bHi):
 # *******************************************
 def conGdkCol(red, green, blue, alpha):
     return Gdk.RGBA(red / 255.0, green / 255.0, blue / 255.0, alpha / 255.0)
-
-# *******************************************
-# Function to parse object to dictionary items.
-# *******************************************
-def objToDict(obj):
-    output = {}
-    # Go through keys/items in object dictionary.
-    for key, item in obj.__dict__.items():
-        if isinstance(item, list):
-            itemList = []
-            for item in item:
-                subItem = objToDict(item)
-                itemList.append(subItem)
-            output[key] = itemList
-        else:
-            output[key] = item
-    # Return the object dictionary.
-    return output
 
 # *******************************************
 # Function to return the sign of an unsigned int.

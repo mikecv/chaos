@@ -53,7 +53,7 @@ logger.addHandler(handler)
 # Log program version.
 logger.info("Program version : {0:s}".format(progVersion))
 
-# *******************************************
+# ****************************s***************
 # Load css style sheet for window decorations.
 # *******************************************
 css_provider = Gtk.CssProvider()
@@ -261,6 +261,25 @@ class Mandelbrot():
         self.imageFrameSizeLbl.set_text("{0:d} x {1:d}".format(self.picFrameWidth, self.picFrameHeight))
         self.imageSizeLbl.set_text("{0:d} x {1:d}".format(self.imageWidth, self.imageHeight))
         self.maxIterationsLbl.set_text("{0:d}".format(self.maxIterations))
+
+    # *******************************************
+    # Block menu items if image generation in progress, i.e. not idle.
+    # Prevents variables that imageCalc requires from changing.
+    # *******************************************
+    def blockMenus(self, idle):
+        # Block menus as necessary if calculations in progress.
+
+        # Inhibit/Enable some menu items during image generation.
+        self.MaxItsItem.set_sensitive(idle)
+        self.MaxItsTool.set_sensitive(idle)
+        self.colEditItem.set_sensitive(idle)
+        self.colEditTool.set_sensitive(idle)
+        self.plotHistogramItem.set_sensitive(idle)
+        self.plotHistogramTool.set_sensitive(idle)
+
+        # Check for Gtk events. Required to update status bar now.
+        while Gtk.events_pending():
+            Gtk.main_iteration()
 
     # *******************************************
     # Zoom image at the current centre at the current zoom factor level.
@@ -565,14 +584,8 @@ class Mandelbrot():
     def newPic(self, widget):
         logger.debug("User selected new image control.")
 
-
         # Inhibit the some menu items during image generation.
-        self.MaxItsItem.set_sensitive(False)
-        self.MaxItsTool.set_sensitive(False)
-        self.colEditItem.set_sensitive(False)
-        self.colEditTool.set_sensitive(False)
-        self.plotHistogramItem.set_sensitive(False)
-        self.plotHistogramTool.set_sensitive(False)
+        self.blockMenus(False)
 
         # Initialise pic to blank image.
         self.initPic()
@@ -602,12 +615,7 @@ class Mandelbrot():
             Gtk.main_iteration()
 
         # Enable menu items inhibited during image generation.
-        self.MaxItsItem.set_sensitive(True)
-        self.MaxItsTool.set_sensitive(True)
-        self.colEditItem.set_sensitive(True)
-        self.colEditTool.set_sensitive(True)
-        self.plotHistogramItem.set_sensitive(True)
-        self.plotHistogramTool.set_sensitive(True)
+        self.blockMenus(True)
 
     # *******************************************
     # Load image data control selected.
@@ -616,12 +624,7 @@ class Mandelbrot():
         logger.debug("User selected load image data control.")
 
         # Inhibit the some menu items during image generation.
-        self.MaxItsItem.set_sensitive(False)
-        self.MaxItsTool.set_sensitive(False)
-        self.colEditItem.set_sensitive(False)
-        self.colEditTool.set_sensitive(False)
-        self.plotHistogramItem.set_sensitive(False)
-        self.plotHistogramTool.set_sensitive(False)
+        self.blockMenus(False)
 
         # Start time for image generation timing.
         startTime = datetime.now()
@@ -672,8 +675,8 @@ class Mandelbrot():
                 logger.debug("Resizing histogram arrays to dimension : {0:d}".format(dataIterations))
                 self.bins = [(i + 1) for i in range(dataIterations)]
                 self.hist = [0 for i in range(dataIterations)]
-            else:
-                self.maxIterations = dataIterations
+            # Update maximum iterations.
+            self.maxIterations = dataIterations
 
             # Read image centre from file.
             self.centreReal = struct.unpack('f', bf.read(4))[0]
@@ -704,17 +707,12 @@ class Mandelbrot():
             self.statusbar.pop(self.context_id)
         self.statusbar.push(self.context_id, "Loaded image and completed render in : {0:s}".format(self.genTime))
 
+        # Enable menu items inhibited during image generation.
+        self.blockMenus(True)
+
         # Check for Gtk events. Required to update status bar now.
         while Gtk.events_pending():
             Gtk.main_iteration()
-
-        # Enable menu items inhibited during image generation.
-        self.MaxItsItem.set_sensitive(True)
-        self.MaxItsTool.set_sensitive(True)
-        self.colEditItem.set_sensitive(True)
-        self.colEditTool.set_sensitive(True)
-        self.plotHistogramItem.set_sensitive(True)
-        self.plotHistogramTool.set_sensitive(True)
 
     # *******************************************
     # Save image data control selected.
@@ -877,6 +875,12 @@ class Mandelbrot():
 
         # If have a filename then save.
         if fname != "":
+
+            # Force to Json files
+            pre, ext = os.path.splitext(fname)
+            fname = pre + '.json'
+
+            # Save palette file.
             self.palette.saveToFile(fname)
 
         # Update status bar to wait for image.
@@ -1018,12 +1022,7 @@ class Mandelbrot():
     # *******************************************
     def moveImage(self, hMove, vMove):
         # Inhibit the some menu items during image generation.
-        self.MaxItsItem.set_sensitive(False)
-        self.MaxItsTool.set_sensitive(False)
-        self.colEditItem.set_sensitive(False)
-        self.colEditTool.set_sensitive(False)
-        self.plotHistogramItem.set_sensitive(False)
-        self.plotHistogramTool.set_sensitive(False)
+        self.blockMenus(False)
 
         # Start time for image generation timing.
         startTime = datetime.now()
@@ -1069,12 +1068,7 @@ class Mandelbrot():
         self.genTime = "{0:s}".format(str(endTime - startTime))
 
         # Enable menu items inhibited during image generation.
-        self.MaxItsItem.set_sensitive(True)
-        self.MaxItsTool.set_sensitive(True)
-        self.colEditItem.set_sensitive(True)
-        self.colEditTool.set_sensitive(True)
-        self.plotHistogramItem.set_sensitive(True)
-        self.plotHistogramTool.set_sensitive(True)
+        self.blockMenus(True)
     
     # *******************************************
     # Method to render the Mandlebrot image.

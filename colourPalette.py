@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
+import logging
+import logging.handlers
 import gi
 import math
+import json
 
 from utils import *
 from colourBoundary import *
@@ -119,13 +122,21 @@ class colourPalette():
     # Save colour palette to file.
     # *******************************************
     def saveToFile(self, jFile):
-        # Create Json output using dictionary function.
-        output = objToDict(self)
+        # Create Json output using dictionary key/items.
+        output = ""
+
+        # Go through boundary list and make dictionary for export to Json format.
+        boundaryList = []
+        for b in self.colBoundaries:
+            bList = {"itLimit" : b.itLimit, "colRed" :b.colRed, "colGreen" : b.colGreen, "colBlue" : b.colBlue}
+            boundaryList.append(bList)
+        serialList = {"colBoundaries" : boundaryList}
 
         # Open file for writing.
         outfile = open(jFile, 'w')
-        outfile.write(json.dumps(output, sort_keys=False, indent=4))
+        outfile.write(json.dumps(serialList, sort_keys=False, indent=4))
         outfile.close()
+
         self.logger.info("Saved colour palette file : {0:s}".format(jFile))
 
     # *******************************************
