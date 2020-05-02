@@ -6,14 +6,14 @@ import json
 import gi
 import os.path
 import time
+import struct
 from datetime import datetime
 from PIL import Image
-import matplotlib.pyplot as plt
-import struct
 
 from utils import *
 from colourPalette import *
 from imageCalc import *
+from histogram import *
 
 # *******************************************
 # Program history.
@@ -106,6 +106,9 @@ class Mandelbrot():
         # Rendering flag black or colour palette.
         self.black = config["Colours"]["renderBlack"]
  
+        # Histogram plotter.
+        self.histogram = histogramPlot(config, logger, builder, self)
+
         # Image generation time.
         self.genTime = ""
 
@@ -903,6 +906,18 @@ class Mandelbrot():
     # Plot colour histogram control selected.
     # *******************************************
     def plotHistogram(self, widget):
+        logger.debug("User selected plot histogram control.")
+
+        # Need to put iterations counts into bins for histogram.
+        self.doHistogramBins()
+
+        # Plot histogram.
+        self.histogram.plotHistogram()
+
+    # *******************************************
+    # Plot colour histogram control selected.
+    # *******************************************
+    def plotHistogramOld(self, widget):
         logger.debug("User selected plot histogram control.")
 
         # Need to put iterations counts into bins for histogram.
