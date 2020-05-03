@@ -911,54 +911,8 @@ class Mandelbrot():
         # Need to put iterations counts into bins for histogram.
         self.doHistogramBins()
 
-        # Plot histogram.
+        # Plot histogram for current image calculation.
         self.histogram.plotHistogram()
-
-    # *******************************************
-    # Plot colour histogram control selected.
-    # *******************************************
-    def plotHistogramOld(self, widget):
-        logger.debug("User selected plot histogram control.")
-
-        # Need to put iterations counts into bins for histogram.
-        self.doHistogramBins()
-
-        # Calculate derivatives.
-        # Potentially use them for detecting turning points for colour changes.
-        # Not being plotted at this stage.
-        firstDeriv = [0 for i in range(self.maxIterations)]
-        for i in range (1, (self.maxIterations - 1)):
-            firstDeriv[i-1] = self.hist[i] - self.hist[i-1]
-
-        fig = plt.figure()
-        # Option to not include max iterations in histogram.
-        # Depending on the image max iterations can swamp the histogram.
-        # Also option to plot as bar graph or as line plot instead.
-        if self.incMaxIterations == True :
-            if self.histLinePlot == True :
-                plt.plot(self.bins, self.hist, color='blue', linewidth=1, marker='o', markersize=2)
-            else:
-                plt.bar(self.bins, self.hist, color='blue')
-        else:
-            if self.histLinePlot == True :
-                plt.plot(self.bins[:-1], self.hist[:-1], color='blue', linewidth=1, marker='o', markersize=2)
-            else:
-                plt.bar(self.bins[:-1], self.hist[:-1], color='blue')
-        plt.xlabel('Iterations')
-        plt.ylabel('Frequency')
-        plt.title('Histogram of Divergence Iterations')
-        # Option to use log scale for iteration count axis (y).
-        # Depending on the plot can make it easier to read.
-        if self.logItsCounts == True :
-            plt.yscale('log')
-        plt.minorticks_on()
-        plt.tick_params(which='major', length=8, width=2, direction='out')
-        plt.tick_params(which='minor', length=4, width=2, direction='out')
-        plt.show()
-
-        # Update status bar to instruct user to seclect centre position
-        self.statusbar.pop(self.context_id)
-        self.statusbar.push(self.context_id, "Histogram of divergence iteration counts...")
 
     # *******************************************
     # Put iteration data into bins.
