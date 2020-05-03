@@ -86,6 +86,7 @@ class Mandelbrot():
 
         # Image colour bits.
         self.imageColours = config["Image"]["colourBits"]
+
         # Number of iterations to use for calculations.
         self.maxIterations = config["Calculations"]["DefMaxIterations"]
 
@@ -231,6 +232,11 @@ class Mandelbrot():
         self.histogramLogScaleCtrl = builder.get_object("histogramLogScaleCtrl")
         self.histogramLogScaleCtrl.connect("notify::active", self.logScaleSwitchActivated)
         self.histogramLogScaleCtrl.set_state(self.logItsCounts)
+
+        # Auto-update histogram plot.
+        # If set, and histogram open then update after recaluclations
+        self.autoHistogram = config["Calculations"]["AutoUpdateHistogram"]
+        self.histogramPresent = False
 
         # Set up the quit menu and toolbar icon item response.
         # Just call Gtk quit method.
@@ -908,37 +914,8 @@ class Mandelbrot():
     def plotHistogram(self, widget):
         logger.debug("User selected plot histogram control.")
 
-        # Need to put iterations counts into bins for histogram.
-        self.doHistogramBins()
-
         # Plot histogram for current image calculation.
         self.histogram.plotHistogram()
-
-    # *******************************************
-    # Put iteration data into bins.
-    # *******************************************
-    def doHistogramBins(self):
-
-        # Reinitialise histogram bins as max iterations may have changed.
-        self.bins = [(i + 1) for i in range(self.maxIterations)]
-        self.hist = [0 for i in range(self.maxIterations)]
-        self.lowBin = 0
-
-        # Need to get iterations into single array of iteration occurances.
-        for bin in range (0, self.maxIterations):
-            self.hist[bin] = 0
-        for r in range (0, self.imageHeight):
-            for c in range (0, self.imageWidth):
-                bin = math.floor(self.iterations[r][c]) - 1
-                self.hist[bin] += 1
-
-        # Look for lowest non-zero bin.
-        # Used for black rendering to maximize colour range.
-        for i, bin in enumerate(self.hist):
-            if bin > 0:
-                break
-        self.lowBin = i
-        logger.debug("Lowest non-zero bin for iteration histogram : {0:d}".format(self.lowBin))
 
     # *******************************************
     # Help/About control selected.
@@ -983,6 +960,10 @@ class Mandelbrot():
         # End time and image generation elapsed time.
         endTime = datetime.now()
         self.genTime = "{0:s}".format(str(endTime - startTime))
+
+        # If auto-update histogram then update.
+        if ((self.autoHistogram == True) & (self.histogramPresent == True)):
+            self.histogram.plotHistogram()
 
     # *******************************************
     # Method to move an image.
@@ -1063,7 +1044,7 @@ class Mandelbrot():
         # Need to put iterations counts into bins for histogram.
         # This also gets lowest iteration bin used for black renders.
         if black:
-            self.doHistogramBins()
+            self.histogram.doHistogramBins()
 
         # Set the pixels in the PIL image.
         for row in range (0, self.imageHeight):

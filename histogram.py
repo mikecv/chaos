@@ -3,6 +3,8 @@
 import logging
 import logging.handlers
 import gi
+import math
+import json
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as fc
 
@@ -34,6 +36,10 @@ class histogramPlot():
         self.buttonHistClose = self.builder.get_object("histCloseBtn")
         self.buttonHistClose.connect('clicked', self.closeHistogram)
 
+        # Create update button and define callback.
+        self.buttonUpdateHistogram = self.builder.get_object("updateHistBtn")
+        self.buttonUpdateHistogram.connect('clicked', self.updateHistogram)
+
     # *******************************************
     # Plot histogram with current image calculations.
     # *******************************************
@@ -56,6 +62,9 @@ class histogramPlot():
         firstDeriv = [0 for i in range(self.chaos.maxIterations)]
         for i in range (1, (self.chaos.maxIterations - 1)):
             firstDeriv[i-1] = self.chaos.hist[i] - self.chaos.hist[i-1]
+
+        # Put divergence iterations into bins for histogram plot.
+        self.doHistogramBins()
 
         # Option to not include max iterations in histogram.
         # Depending on the image max iterations can swamp the histogram.
@@ -85,9 +94,49 @@ class histogramPlot():
         # Show the histogram dialog.
         self.winHistogram.show_all()
 
+        # Histogram present flag set.
+        self.chaos.histogramPresent = True
+
+    # *******************************************
+    # Update histogram plot with current image calculations.
+    # *******************************************
+    def updateHistogram(self, widget):
+        # Plot histogram in progress if need be.
+        self.plotHistogram()
+
+    # *******************************************
+    # Put iteration data into bins.
+    # *******************************************
+    def doHistogramBins(self):
+        self.logger.debug("Putting divergent interations into histogram bins.")
+
+        # Reinitialise histogram bins as max iterations may have changed.
+        self.chaos.bins = [(i + 1) for i in range(self.chaos.maxIterations)]
+        self.chaos.hist = [0 for i in range(self.chaos.maxIterations)]
+        self.chaos.lowBin = 0
+
+        # Need to get iterations into single array of iteration occurances.
+        for bin in range (0, self.chaos.maxIterations):
+            self.chaos.hist[bin] = 0
+        for r in range (0, self.chaos.imageHeight):
+            for c in range (0, self.chaos.imageWidth):
+                bin = math.floor(self.chaos.iterations[r][c]) - 1
+                self.chaos.hist[bin] += 1
+
+        # Look for lowest non-zero bin.
+        # Used for black rendering to maximize colour range.
+        for i, bin in enumerate(self.chaos.hist):
+            if bin > 0:
+                break
+        self.chaos.lowBin = i
+        self.logger.debug("Lowest non-zero bin for iteration histogram : {0:d}".format(self.chaos.lowBin))
+
     # *******************************************
     # Close histogram plot callback.
     # *******************************************
     def closeHistogram(self, widget):
-        # Do nothing, just hide dialog.
+        self.logger.debug("Closing \(hiding\) histogram plot.")
+
+        # Do nothing, just clear histogram present flag and hide dialog.
+        self.chaos.histogramPresent = False
         self.winHistogram.hide()
