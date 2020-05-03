@@ -1042,7 +1042,7 @@ class Mandelbrot():
         logger.debug("Useful colour palette boundaries : {0:d}, total boundaries : {1:d}".format(useFulBoundaries, numBoundaries))
 
         # Need to put iterations counts into bins for histogram.
-        # This also gets lowest iteration bin used for black renders.
+        # This also gets lowest iteration bin used for black renders here.
         if black:
             self.histogram.doHistogramBins()
 

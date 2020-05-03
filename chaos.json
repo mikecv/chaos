@@ -16,13 +16,13 @@
         "DefScale" : 1.0,
         "DefMaxIterations" : 100,
         "ThreadChkDelay" : 1.0,
-        "AutoUpdateHistogram" : 0
+        "AutoUpdateHistogram" : 1
     },
     "Colours" :
     {
         "maxBoundries" : 10,
         "renderBlack" : 0,
-        "histLinePlot" : 0,
+        "histLinePlot" : 1,
         "includeMaxIts" : 0,
         "logItsCounts" : 0
     }

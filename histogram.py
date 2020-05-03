@@ -99,6 +99,7 @@ class histogramPlot():
 
     # *******************************************
     # Update histogram plot with current image calculations.
+    # Used if no auto-update, but also used if changing plot settings.
     # *******************************************
     def updateHistogram(self, widget):
         # Plot histogram in progress if need be.

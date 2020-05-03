@@ -1392,7 +1392,7 @@
   </object>
   <object class="GtkDialog" id="histogramWindow">
     <property name="can_focus">True</property>
-    <property name="title" translatable="yes">Iteration Divergence Histogram</property>
+    <property name="title" translatable="yes">Iterations Divergence Histogram</property>
     <property name="resizable">False</property>
     <property name="destroy_with_parent">True</property>
     <property name="icon">about.png</property>
